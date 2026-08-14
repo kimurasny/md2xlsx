@@ -27,8 +27,10 @@ from .blocks import (
 from .image_handler import ImageError, is_data_uri, is_remote, resolve_image
 from .utils import unique_sheet_name
 
-BODY_FONT_NAME = "Calibri"
+# 日本語文書での可読性を優先し、既定の本文フォントはメイリオとする。
+BODY_FONT_NAME = "Meiryo"
 CODE_FONT_NAME = "Consolas"
+BODY_FONT_SIZE = 11
 
 TEXT_COLUMN_WIDTH = 48
 TABLE_COLUMN_WIDTH = 20
@@ -112,9 +114,12 @@ class SheetWriter:
         text = paragraph.text
         if paragraph.quote:
             cell.value = _rich_text(paragraph.runs, prefix="> ")
-            cell.font = Font(name=BODY_FONT_NAME, size=11, italic=True, color="595959")
+            cell.font = Font(
+                name=BODY_FONT_NAME, size=BODY_FONT_SIZE, italic=True, color="595959"
+            )
         else:
             cell.value = _rich_text(paragraph.runs)
+            cell.font = Font(name=BODY_FONT_NAME, size=BODY_FONT_SIZE)
         cell.alignment = _WRAP_TOP
         if not text.strip():
             cell.value = None
@@ -126,6 +131,7 @@ class SheetWriter:
             prefix = INDENT_PREFIX * item.indent
             marker = f"{item.marker} " if item.marker else "  "
             cell.value = _rich_text(item.runs, prefix=f"{prefix}{marker}")
+            cell.font = Font(name=BODY_FONT_NAME, size=BODY_FONT_SIZE)
             cell.alignment = _WRAP_TOP
             self._row += 1
 
@@ -146,7 +152,7 @@ class SheetWriter:
             cell.value = values[index] if index < len(values) else None
             cell.alignment = _WRAP_TOP
             cell.border = _CELL_BORDER
-            cell.font = Font(name=BODY_FONT_NAME, size=11, bold=header)
+            cell.font = Font(name=BODY_FONT_NAME, size=BODY_FONT_SIZE, bold=header)
             if header:
                 cell.fill = _TABLE_HEADER_FILL
         self._row += 1
@@ -168,7 +174,7 @@ class SheetWriter:
     def _write_rule(self) -> None:
         cell = self._cell()
         cell.value = "―" * 20
-        cell.font = Font(name=BODY_FONT_NAME, size=11, color="A6A6A6")
+        cell.font = Font(name=BODY_FONT_NAME, size=BODY_FONT_SIZE, color="A6A6A6")
         self._row += 1
 
     def _write_image(self, block: ImageBlock) -> None:
@@ -202,7 +208,7 @@ class SheetWriter:
     def _write_note(self, text: str) -> None:
         cell = self._cell()
         cell.value = text
-        cell.font = Font(name=BODY_FONT_NAME, size=11, italic=True, color="C00000")
+        cell.font = Font(name=BODY_FONT_NAME, size=BODY_FONT_SIZE, italic=True, color="C00000")
         cell.alignment = _WRAP_TOP
         self._row += 1
 
@@ -230,7 +236,8 @@ def _rich_text(runs: list[Run], prefix: str = "") -> CellRichText | str | None:
             font = InlineFont(
                 b=run.bold,
                 i=run.italic,
-                rFont=CODE_FONT_NAME if run.code else None,
+                rFont=CODE_FONT_NAME if run.code else BODY_FONT_NAME,
+                sz=BODY_FONT_SIZE,
             )
             pieces.append(TextBlock(font, run.text))
         else:
@@ -240,6 +247,20 @@ def _rich_text(runs: list[Run], prefix: str = "") -> CellRichText | str | None:
     if not decorated:
         return "".join(str(piece) for piece in pieces)
     return CellRichText(pieces)
+
+
+def apply_default_font(
+    workbook: Workbook,
+    name: str = BODY_FONT_NAME,
+    size: float = BODY_FONT_SIZE,
+) -> None:
+    """Workbook 全体の既定フォントを差し替える。
+
+    openpyxl には既定フォントを設定する API がないため、Normal スタイルが
+    参照するフォントテーブル先頭の定義を置き換える。これにより、このツールが
+    値を書き込んでいないセル（利用者が後から入力するセル）も同じフォントになる。
+    """
+    workbook._fonts[0] = Font(name=name, size=size)
 
 
 class WorkbookBuilder:
@@ -252,6 +273,7 @@ class WorkbookBuilder:
 
     def build(self, sections: list[Section]) -> Workbook:
         workbook = Workbook()
+        apply_default_font(workbook)
         default_sheet = workbook.active
         workbook.remove(default_sheet)
 

@@ -33,7 +33,7 @@ CODE_FONT_NAME = "Consolas"
 BODY_FONT_SIZE = 11
 
 # テーブルヘッダーの背景色と罫線色。業務文書として見やすい青系ヘッダー＋黒罫線とする。
-TABLE_HEADER_COLOR = "8EA9DB"
+TABLE_HEADER_COLOR = "8DB4E2"
 TABLE_BORDER_COLOR = "000000"
 
 TEXT_COLUMN_WIDTH = 48

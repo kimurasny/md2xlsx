@@ -32,6 +32,10 @@ BODY_FONT_NAME = "Meiryo"
 CODE_FONT_NAME = "Consolas"
 BODY_FONT_SIZE = 11
 
+# テーブルヘッダーの背景色と罫線色。業務文書として見やすい青系ヘッダー＋黒罫線とする。
+TABLE_HEADER_COLOR = "8EA9DB"
+TABLE_BORDER_COLOR = "000000"
+
 TEXT_COLUMN_WIDTH = 48
 TABLE_COLUMN_WIDTH = 20
 INDENT_PREFIX = "    "
@@ -40,10 +44,10 @@ INDENT_PREFIX = "    "
 _HEADING_SIZES = {1: 16, 2: 14, 3: 12.5, 4: 12, 5: 11, 6: 11}
 
 _HEADING_FILL = PatternFill("solid", fgColor="EFEFEF")
-_TABLE_HEADER_FILL = PatternFill("solid", fgColor="DDEBF7")
+_TABLE_HEADER_FILL = PatternFill("solid", fgColor=TABLE_HEADER_COLOR)
 _CODE_FILL = PatternFill("solid", fgColor="F5F5F5")
 
-_THIN_SIDE = Side(style="thin", color="B0B0B0")
+_THIN_SIDE = Side(style="thin", color=TABLE_BORDER_COLOR)
 _CELL_BORDER = Border(left=_THIN_SIDE, right=_THIN_SIDE, top=_THIN_SIDE, bottom=_THIN_SIDE)
 
 _WRAP_TOP = Alignment(wrap_text=True, vertical="top")
@@ -284,6 +288,8 @@ class WorkbookBuilder:
         for section in sections:
             name = unique_sheet_name(section.title, used_names)
             sheet = workbook.create_sheet(title=name)
+            # 背景の枠線（グリッド線）を非表示にし、テーブルの罫線のみを見せる。
+            sheet.sheet_view.showGridLines = False
             writer = SheetWriter(sheet, self._base_dir)
             writer.write_blocks(section.blocks)
             self.warnings.extend(writer.warnings)

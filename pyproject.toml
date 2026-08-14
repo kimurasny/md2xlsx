@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md2xlsx"
+version = "0.1.0"
+description = "Markdown ファイルを Excel(.xlsx) へ変換する CLI ツール"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "markdown-it-py>=3.0,<5",
+    "openpyxl>=3.1,<4",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+md2xlsx = "md2xlsx.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
